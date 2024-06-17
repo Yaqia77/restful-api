@@ -1,12 +1,14 @@
 package host
 
-import "context"
+import (
+	"context"
+)
 
 type Service interface {
 	//录入主机信息
 	CreateHost(context.Context, *Host) (*Host, error)
 	//查询主机列表
-	QueryHost(context.Context, *QueryHostRequest) ([]*Host, error)
+	QueryHost(context.Context, *QueryHostRequest) (*HostSet, error)
 	//查询主机详情
 	DescribeHost(context.Context, *QueryHostRequest) (*Host, error)
 	//更新主机信息
@@ -17,6 +19,13 @@ type Service interface {
 type HostSet struct {
 	Items []*Host
 	Total int
+}
+
+func NewHost() *Host {
+	return &Host{
+		Resource: &Resource{},
+		Describe: &Describe{},
+	}
 }
 
 type Host struct {
