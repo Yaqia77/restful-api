@@ -2,6 +2,8 @@ package host
 
 import (
 	"context"
+
+	"gorm.io/gorm"
 )
 
 type Service interface {
@@ -47,21 +49,21 @@ const (
 )
 
 type Resource struct {
-	Id          string            `json:"id"  validate:"required"`     // 全局唯一Id
-	Vendor      Vendor            `json:"vendor"`                      // 厂商
-	Region      string            `json:"region"  validate:"required"` // 地域
-	CreateAt    int64             `json:"create_at"`                   // 创建时间
-	ExpireAt    int64             `json:"expire_at"`                   // 过期时间
-	Type        string            `json:"type"  validate:"required"`   // 规格
-	Name        string            `json:"name"  validate:"required"`   // 名称
-	Description string            `json:"description"`                 // 描述
-	Status      string            `json:"status"`                      // 服务商中的状态
-	Tags        map[string]string `json:"tags"`                        // 标签
-	UpdateAt    int64             `json:"update_at"`                   // 更新时间
-	SyncAt      int64             `json:"sync_at"`                     // 同步时间
-	Account     string            `json:"accout"`                      // 资源的所属账号
-	PublicIP    string            `json:"public_ip"`                   // 公网IP
-	PrivateIP   string            `json:"private_ip"`                  // 内网IP
+	Id          string `json:"id"  validate:"required"`     // 全局唯一Id
+	Vendor      Vendor `json:"vendor"`                      // 厂商
+	Region      string `json:"region"  validate:"required"` // 地域
+	CreateAt    int64  `json:"create_at"`                   // 创建时间
+	ExpireAt    int64  `json:"expire_at"`                   // 过期时间
+	Type        string `json:"type"  validate:"required"`   // 规格
+	Name        string `json:"name"  validate:"required"`   // 名称
+	Description string `json:"description"`                 // 描述
+	Status      string `json:"status"`                      // 服务商中的状态
+	Tags        string `json:"tags"`                        // 标签
+	UpdateAt    int64  `json:"update_at"`                   // 更新时间
+	SyncAt      int64  `json:"sync_at"`                     // 同步时间
+	Account     string `json:"accout"`                      // 资源的所属账号
+	PublicIP    string `json:"public_ip"`                   // 公网IP
+	PrivateIP   string `json:"private_ip"`                  // 内网IP
 }
 
 type Describe struct {
@@ -83,4 +85,26 @@ type UpdateHostRequest struct {
 
 type DeleteHostRequest struct {
 	Id string
+}
+
+func (Resource) TableName() string {
+	return "resource"
+}
+
+func (Describe) TableName() string {
+	return "host"
+}
+
+func AutoMigrateResource(db *gorm.DB) error {
+	if err := db.AutoMigrate(&Resource{}); err != nil {
+		return err
+	}
+	return nil
+}
+
+func AutoMigrateDescribe(db *gorm.DB) error {
+	if err := db.AutoMigrate(&Describe{}); err != nil {
+		return err
+	}
+	return nil
 }

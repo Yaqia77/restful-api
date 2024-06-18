@@ -2,26 +2,30 @@ package conf
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
+	"restful-api/apps/host"
 	"sync"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 // 全局config实例对象,
 // 也就是我们程序，在内存中的配置对象
 // 程序内部获取配置, 都通过读取该对象
 // 该Config对象 什么时候被初始化喃?
-//    配置加载时:
-//       LoadConfigFromToml
-//       LoadConfigFromEnv
+//
+//	配置加载时:
+//	   LoadConfigFromToml
+//	   LoadConfigFromEnv
+//
 // 为了不被程序在运行时恶意修改, 设置成私有变量
 var config *Config
 
 // 全局MySQL 客户端实例
-var db *sql.DB
+var db *gorm.DB
 
 // 要想获取配置, 单独提供函数
 // 全局Config对象获取函数
@@ -100,7 +104,7 @@ type MySQL struct {
 
 // 1. 第一种方式, 使用LoadGlobal 在加载时 初始化全局db实例
 // 2. 第二种方式, 惰性加载, 获取DB是，动态判断再初始化
-func (m *MySQL) GetDB() *sql.DB {
+func (m *MySQL) GetDB() *gorm.DB {
 	// 直接加锁, 锁住临界区
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -122,23 +126,44 @@ func (m *MySQL) GetDB() *sql.DB {
 // pool []*driverConn, 维护pool里面的连接都是可用的, 定期检查我们的conn健康情况
 // 某一个driverConn已经失效, driverConn.Reset(), 清空该结构体的数据, Reconn获取一个连接, 让该conn借壳存活
 // 避免driverConn结构体的内存申请和释放的一个成本
-func (m *MySQL) getDBConn() (*sql.DB, error) {
+func (m *MySQL) getDBConn() (*gorm.DB, error) {
 	var err error
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&multiStatements=true", m.UserName, m.Password, m.Host, m.Port, m.Database)
-	db, err := sql.Open("mysql", dsn)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&multiStatements=true",
+		m.UserName,
+		m.Password,
+		m.Host,
+		m.Port,
+		m.Database)
+
+	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		PrepareStmt: true, // 为了更好的性能，启用预编译语句
+	})
+
+	err = host.AutoMigrateResource(db)
+	err = host.AutoMigrateDescribe(db)
+
 	if err != nil {
 		return nil, fmt.Errorf("connect to mysql<%s> error, %s", dsn, err.Error())
 	}
 
-	db.SetMaxOpenConns(m.MaxOpenConn)
-	db.SetMaxIdleConns(m.MaxIdleConn)
-	db.SetConnMaxLifetime(time.Second * time.Duration(m.MaxLifeTime))
-	db.SetConnMaxIdleTime(time.Second * time.Duration(m.MaxIdleTime))
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, fmt.Errorf("get underlying SQL DB error, %s", err.Error())
+	}
+
+	// 设置连接池配置
+	sqlDB.SetMaxOpenConns(m.MaxOpenConn)
+	sqlDB.SetMaxIdleConns(m.MaxIdleConn)
+	sqlDB.SetConnMaxLifetime(time.Second * time.Duration(m.MaxLifeTime))
+	sqlDB.SetConnMaxIdleTime(time.Second * time.Duration(m.MaxIdleTime))
+
+	// 测试连接
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := db.PingContext(ctx); err != nil {
+	if err := sqlDB.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("ping mysql<%s> error, %s", dsn, err.Error())
 	}
+
 	return db, nil
 }
 
