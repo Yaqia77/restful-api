@@ -184,3 +184,23 @@ type Log struct {
 	To      LogTo     `toml:"to" env:"LOG_TO"`
 	PathDir string    `toml:"path_dir" env:"LOG_PATH_DIR"`
 }
+
+// TransferFunds 事务处理
+func TransferFunds(db *gorm.DB, operations ...func(*gorm.DB) error) error {
+	fmt.Println("TransferFunds", db,operations)
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	for _, op := range operations {
+		if err := op(tx); err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit().Error
+}
