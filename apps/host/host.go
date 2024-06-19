@@ -2,7 +2,6 @@ package host
 
 import (
 	"context"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
@@ -41,16 +40,6 @@ type Host struct {
 	*Resource
 	//资源独有属性部分
 	*Describe
-}
-
-func (h *Host) Validate() error {
-	return validate.Struct(h)
-}
-
-func (h *Host) InjectDefault() {
-	if h.CreateAt == 0 {
-		h.CreateAt = time.Now().UnixMilli()
-	}
 }
 
 type Vendor int

@@ -204,3 +204,4 @@ func TransferFunds(db *gorm.DB, operations ...func(*gorm.DB) error) error {
 
 	return tx.Commit().Error
 }
+
