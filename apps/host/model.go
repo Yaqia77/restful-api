@@ -1,8 +1,6 @@
 package host
 
 import (
-	"context"
-
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 )
@@ -11,18 +9,6 @@ var (
 	validate = validator.New()
 )
 
-type Service interface {
-	//录入主机信息
-	CreateHost(context.Context, *Host) (*Host, error)
-	//查询主机列表
-	QueryHost(context.Context, *QueryHostRequest) (*HostSet, error)
-	//查询主机详情
-	DescribeHost(context.Context, *QueryHostRequest) (*Host, error)
-	//更新主机信息
-	UpdateHost(context.Context, *UpdateHostRequest) (*Host, error)
-	//删除主机
-	DeleteHost(context.Context, *DeleteHostRequest) (*Host, error)
-}
 type HostSet struct {
 	Items []*Host
 	Total int
@@ -89,6 +75,9 @@ type UpdateHostRequest struct {
 	*Describe
 }
 
+type DescribeHostRequest struct {
+	Id string
+}
 type DeleteHostRequest struct {
 	Id string
 }

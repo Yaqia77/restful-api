@@ -25,6 +25,7 @@ func (i *HostServiceImpl) CreateHost(ctx context.Context, ins *host.Host) (*host
 	insertResource := func(db *gorm.DB) error {
 		return db.Create(ins.Resource).Error
 	}
+
 	insertDescribe := func(db *gorm.DB) error {
 		return db.Create(ins.Describe).Error
 	}
@@ -39,20 +40,18 @@ func (i *HostServiceImpl) CreateHost(ctx context.Context, ins *host.Host) (*host
 	return ins, nil
 }
 
-func (i *HostServiceImpl) QueryHost(ctx context.Context, req *host.QueryHostRequest) (
-	*host.HostSet, error) {
+func (i *HostServiceImpl) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
 	return nil, nil
 }
 
-func (i *HostServiceImpl) DescribeHost(ctx context.Context, req *host.QueryHostRequest) (
-	*host.Host, error) {
+func (i *HostServiceImpl) DescribeHost(ctx context.Context, req *host.DescribeHostRequest) (*host.Host, error) {
 	return nil, nil
 }
-func (i *HostServiceImpl) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (
-	*host.Host, error) {
+
+func (i *HostServiceImpl) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (*host.Host, error) {
 	return nil, nil
 }
-func (i *HostServiceImpl) DeleteHost(ctx context.Context, req *host.DeleteHostRequest) (
-	*host.Host, error) {
+
+func (i *HostServiceImpl) DeleteHost(ctx context.Context, req *host.DeleteHostRequest) (*host.Host, error) {
 	return nil, nil
 }
