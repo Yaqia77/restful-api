@@ -1,6 +1,7 @@
 package http
 
 import (
+	"restful-api/apps"
 	"restful-api/apps/host"
 
 	"github.com/gin-gonic/gin"
@@ -14,11 +15,20 @@ type Handler struct {
 	svc host.Service
 }
 
-// NewHandler 实例化Handler
-func NewHostHttpHandler(svc host.Service) *Handler {
-	return &Handler{svc: svc}
+func (h *Handler) Config() {
+
+	//从IOC里面获取HostService的实例对象
+	h.svc = apps.GetImpl(host.AppName).(host.Service)
 }
 
 func (h *Handler) Registry(r gin.IRouter) {
 	r.POST("/hosts", h.createHost)
+}
+
+func (h *Handler) Name() string {
+	return host.AppName
+}
+
+func init() {
+	apps.RegistryGin(handler)
 }
