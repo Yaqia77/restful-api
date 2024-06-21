@@ -14,7 +14,7 @@ var (
 	HostService host.Service
 
 	ImplApp = map[string]ImplService{}
-	ginApp  = map[string]GinService{}
+	ginApps = map[string]GinService{}
 )
 
 func RegistryImpl(svc ImplService) {
@@ -29,6 +29,16 @@ func RegistryImpl(svc ImplService) {
 		HostService = v
 	}
 }
+
+// 已经加载完成的Gin App由哪些
+func LoadedGinApps() (names []string) {
+	for k := range ginApps {
+		names = append(names, k)
+	}
+
+	return
+}
+
 func GetImpl(name string) interface{} {
 	for k, v := range ImplApp {
 		if k == name {
@@ -40,11 +50,11 @@ func GetImpl(name string) interface{} {
 
 func RegistryGin(svc GinService) {
 	//服务实例注册到svcs map当中
-	if _, ok := ginApp[svc.Name()]; ok {
+	if _, ok := ginApps[svc.Name()]; ok {
 		panic("service already registered: " + svc.Name())
 	}
 
-	ginApp[svc.Name()] = svc
+	ginApps[svc.Name()] = svc
 
 }
 
@@ -57,12 +67,12 @@ func InitImpl() {
 
 func InitGin(r gin.IRouter) {
 	//先初始化好所有对象
-	for _, v := range ginApp {
+	for _, v := range ginApps {
 		v.Config()
 	}
 
 	//完成HTTP Handler注册
-	for _, v := range ginApp {
+	for _, v := range ginApps {
 		v.Registry(r)
 	}
 }

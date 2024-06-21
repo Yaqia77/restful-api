@@ -2,11 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
 	"restful-api/apps"
 	_ "restful-api/apps/all"
 	"restful-api/conf"
+	"restful-api/protocol"
+	"syscall"
 
-	"github.com/gin-gonic/gin"
+	"github.com/infraboard/mcube/logger"
 	"github.com/infraboard/mcube/logger/zap"
 	"github.com/spf13/cobra"
 )
@@ -38,12 +42,47 @@ var StartCmd = &cobra.Command{
 		}
 		apps.InitImpl()
 
-		r := gin.Default()
-		//注册IOC容器中所有http handler
-		apps.InitGin(r)
+		// r := gin.Default()
+		// //注册IOC容器中所有http handler
+		// apps.InitGin(r)
 
-		return r.Run(conf.C().App.HttpAddr())
+		// return r.Run(conf.C().App.HttpAddr())
+		svc := newManager()
+
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGHUP, syscall.SIGINT)
+		go svc.WaitStop(ch)
+		return svc.Start()
 	},
+}
+
+func newManager() *manager {
+	return &manager{
+		http: protocol.NewHttpService(),
+		l:    zap.L().Named("CLI"),
+	}
+}
+
+// 用于管理所有需要启动的服务
+// 1. HTTP 服务
+type manager struct {
+	http *protocol.HttpService
+	l    logger.Logger
+}
+
+func (m *manager) Start() error {
+	return m.http.Start()
+}
+
+// 处理来自外部的中断信号, 比如Terminal
+func (m *manager) WaitStop(ch <-chan os.Signal) {
+	for v := range ch {
+		switch v {
+		default:
+			m.l.Infof("received signal: %s", v)
+			m.http.Stop()
+		}
+	}
 }
 
 // 1. http API, Grpc API 需要启动, 消息总线也需要监听, 比如负责注册于配置,  这些模块都是独立
