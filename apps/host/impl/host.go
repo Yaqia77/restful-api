@@ -7,13 +7,14 @@ import (
 	"restful-api/pkg/utils"
 	"time"
 
+	"github.com/infraboard/mcube/logger"
 	"gorm.io/gorm"
 )
 
 func (i *HostServiceImpl) CreateHost(ctx context.Context, ins *host.Host) (*host.Host, error) {
-	// i.l.Debug("CreateHost")
-	// i.l.Debugf("CreateHost request: %v", ins)
-	// i.l.With(logger.NewAny("request", ins)).Debug("CreateHost")
+	i.l.Debug("CreateHost")
+	i.l.Debugf("CreateHost request: %v", ins)
+	i.l.With(logger.NewAny("request", ins)).Debug("CreateHost")
 	ins.Id = utils.GenerateId(8)
 	ins.ResourceID = ins.Id
 
