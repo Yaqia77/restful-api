@@ -42,7 +42,35 @@ func (i *HostServiceImpl) CreateHost(ctx context.Context, ins *host.Host) (*host
 }
 
 func (i *HostServiceImpl) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
-	return nil, nil
+	var hosts []*host.Host
+	var totalCount int64
+
+	// Base query
+	query := i.db.Model(&host.Resource{}).Joins("left join host on host.resource_id = id").Preload("Describe")
+
+	// Apply keyword filter if provided
+	if req.Keywords != "" {
+		i.l.Debug("QueryHost", "keywords", req.Keywords)
+		query = query.Where("resource.name LIKE ? OR resource.description LIKE ? OR resource.public_ip LIKE ? OR resource.private_ip LIKE ?", "%"+req.Keywords+"%", "%"+req.Keywords+"%", "%"+req.Keywords+"%", "%"+req.Keywords+"%")
+	}
+
+	// Count total records
+	if err := query.Count(&totalCount).Error; err != nil {
+		return nil, err
+	}
+
+	// Apply pagination
+	offset := (req.PageNumber - 1) * req.PageSize
+	if err := query.Limit(req.PageSize).Offset(offset).Find(&hosts).Error; err != nil {
+		return nil, err
+	}
+
+	hostSet := &host.HostSet{
+		Items: hosts,
+		Total: int(totalCount),
+	}
+
+	return hostSet, nil
 }
 
 func (i *HostServiceImpl) DescribeHost(ctx context.Context, req *host.DescribeHostRequest) (*host.Host, error) {

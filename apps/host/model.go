@@ -40,21 +40,22 @@ const (
 )
 
 type Resource struct {
-	Id          string `json:"id" gorm:"primarykey"`       // 全局唯一Id主键ID
-	Vendor      Vendor `json:"vendor"`                     // 厂商
-	Region      string `json:"region"  binding:"required"` // 地域
-	CreateAt    int64  `json:"create_at"`                  // 创建时间
-	ExpireAt    int64  `json:"expire_at"`                  // 过期时间
-	Type        string `json:"type"  binding:"required"`   // 规格
-	Name        string `json:"name"  binding:"required"`   // 名称
-	Description string `json:"description"`                // 描述
-	Status      string `json:"status"`                     // 服务商中的状态
-	Tags        string `json:"tags"`                       // 标签
-	UpdateAt    int64  `json:"update_at"`                  // 更新时间
-	SyncAt      int64  `json:"sync_at"`                    // 同步时间
-	Account     string `json:"accout"`                     // 资源的所属账号
-	PublicIP    string `json:"public_ip"`                  // 公网IP
-	PrivateIP   string `json:"private_ip"`                 // 内网IP
+	Id          string   `json:"id" gorm:"primarykey"`       // 全局唯一Id主键ID
+	Vendor      Vendor   `json:"vendor"`                     // 厂商
+	Region      string   `json:"region"  binding:"required"` // 地域
+	CreateAt    int64    `json:"create_at"`                  // 创建时间
+	ExpireAt    int64    `json:"expire_at"`                  // 过期时间
+	Type        string   `json:"type"  binding:"required"`   // 规格
+	Name        string   `json:"name"  binding:"required"`   // 名称
+	Description string   `json:"description"`                // 描述
+	Status      string   `json:"status"`                     // 服务商中的状态
+	Tags        string   `json:"tags"`                       // 标签
+	UpdateAt    int64    `json:"update_at"`                  // 更新时间
+	SyncAt      int64    `json:"sync_at"`                    // 同步时间
+	Account     string   `json:"accout"`                     // 资源的所属账号
+	PublicIP    string   `json:"public_ip"`                  // 公网IP
+	PrivateIP   string   `json:"private_ip"`                 // 内网IP
+	Describe    Describe `json:"describe" gorm:"foreignKey:ResourceID;references:Id"`
 }
 
 type Describe struct {
@@ -68,7 +69,25 @@ type Describe struct {
 	SerialNumber string `json:"serial_number"`                 // 序列号
 }
 
+func (req *QueryHostRequest) GetPageSize() uint {
+	return uint(req.PageSize)
+}
+
+func (req *QueryHostRequest) OffSet() int64 {
+	return int64((req.PageNumber - 1) * req.PageSize)
+}
+
+func NewQueryHostRequest() *QueryHostRequest {
+	return &QueryHostRequest{
+		PageSize:   20,
+		PageNumber: 1,
+	}
+}
+
 type QueryHostRequest struct {
+	PageSize   int    `json:"page_size"`
+	PageNumber int    `json:"page_number"`
+	Keywords   string `json:"kws"`
 }
 
 type UpdateHostRequest struct {

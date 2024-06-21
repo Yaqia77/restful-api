@@ -10,8 +10,8 @@ import (
 var vers bool
 var RootCmd = &cobra.Command{
 	Use:   "host-api",
-	Short: "A simple host api server",
-	Long:  `A simple host api server`,
+	Short: "host-api 后端API服务",
+	Long:  "host-api 后端API服务",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if vers {
 			fmt.Println(version.FullVersion())

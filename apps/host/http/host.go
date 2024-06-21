@@ -24,3 +24,20 @@ func (h *Handler) createHost(c *gin.Context) {
 
 	utils.SuccessResponse(c, ins)
 }
+
+func (h *Handler) queryHost(c *gin.Context) {
+	ins := host.NewQueryHostRequest()
+
+	if err := c.BindQuery(ins); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.svc.QueryHost(c.Request.Context(), ins)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, result)
+}

@@ -23,6 +23,7 @@ func (h *Handler) Config() {
 
 func (h *Handler) Registry(r gin.IRouter) {
 	r.POST("/hosts", h.createHost)
+	r.GET("/query", h.queryHost)
 }
 
 func (h *Handler) Name() string {
