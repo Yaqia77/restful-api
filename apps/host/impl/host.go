@@ -76,7 +76,16 @@ func (i *HostServiceImpl) QueryHost(ctx context.Context, req *host.QueryHostRequ
 }
 
 func (i *HostServiceImpl) DescribeHost(ctx context.Context, req *host.DescribeHostRequest) (*host.Host, error) {
-	return nil, nil
+	hosts := host.NewHost()
+	query := i.db.Model(&host.Resource{}).Joins("left join host on host.resource_id = id").Preload("Describe")
+
+	query = query.Where("resource.id = ? ", req.Id)
+
+	if err := query.Find(&hosts).Error; err != nil {
+		return nil, err
+	}
+
+	return hosts, nil
 }
 
 func (i *HostServiceImpl) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (*host.Host, error) {

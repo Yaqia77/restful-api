@@ -16,22 +16,20 @@ var (
 	service host.Service
 )
 
-func TestQuery(t *testing.T) {
+//查询详情信息
+func TestDescribe(t *testing.T) {
 	should := assert.New(t)
 
 	// 创建一个Host实例
 	// ins := host.NewQueryHostRequest()
 
-	// 设置Host的属性
-	ins := &host.QueryHostRequest{
-		PageSize:   10,
-		PageNumber: 1,
-	}
-	result, err := service.QueryHost(context.Background(), ins)
+	// id := &host.DescribeHostRequest{
+	// 	Id: "test-02",
+	// }
+	id := host.NewDescribeHostRequestWithId("test-02")
+	result, err := service.DescribeHost(context.Background(), id)
 	if should.NoError(err) {
-		for i := range result.Items {
-			fmt.Println(result.Items[i].Id)
-		}
+		fmt.Println(result.Id)
 	}
 }
 
@@ -47,9 +45,46 @@ func TestInit(t *testing.T) {
 	// host service的具体实现
 	service = impl.NewHostServiceImpl()
 
-	TestQuery(t)
+	TestDescribe(t)
 }
 
+//查询主机列表测试
+// func TestQuery(t *testing.T) {
+// 	should := assert.New(t)
+
+// 	// 创建一个Host实例
+// 	// ins := host.NewQueryHostRequest()
+
+// 	// 设置Host的属性
+// 	ins := &host.QueryHostRequest{
+// 		PageSize:   10,
+// 		PageNumber: 1,
+// 		Keywords:   "11.10",
+// 	}
+// 	result, err := service.QueryHost(context.Background(), ins)
+// 	if should.NoError(err) {
+// 		for i := range result.Items {
+// 			fmt.Println(result.Items[i].Id)
+// 		}
+// 	}
+// }
+
+// func TestInit(t *testing.T) {
+
+// 	err := conf.LoadConfigFromToml("../../../etc/demo.toml")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	//需要初始化全局Logger
+// 	//为什么不涉及韦默认打印，因为性能
+// 	fmt.Println(zap.DevelopmentSetup())
+// 	// host service的具体实现
+// 	service = impl.NewHostServiceImpl()
+
+// 	TestQuery(t)
+// }
+
+//创建主机测试
 // func TestCreate(t *testing.T) {
 // 	should := assert.New(t)
 

@@ -41,3 +41,19 @@ func (h *Handler) queryHost(c *gin.Context) {
 
 	utils.SuccessResponse(c, result)
 }
+
+func (h *Handler) describeHost(c *gin.Context) {
+	id := host.NewDescribeHostRequestWithId(c.Param("id"))
+	if err := c.Bind(id); err != nil {
+		utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.svc.DescribeHost(c.Request.Context(), id)
+	if err != nil {
+		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, result)
+}
