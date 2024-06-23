@@ -29,7 +29,9 @@ func TestQuery(t *testing.T) {
 	}
 	result, err := service.QueryHost(context.Background(), ins)
 	if should.NoError(err) {
-		fmt.Println(result)
+		for i := range result.Items {
+			fmt.Println(result.Items[i].Id)
+		}
 	}
 }
 

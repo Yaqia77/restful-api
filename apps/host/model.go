@@ -1,6 +1,9 @@
 package host
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 )
@@ -9,9 +12,32 @@ var (
 	validate = validator.New()
 )
 
+func NewQueryHostFromHTTP(r *http.Request) *QueryHostRequest {
+	req := NewQueryHostRequest()
+	qs := r.URL.Query()
+
+	pss := qs.Get("page_size")
+	if pss != "" {
+		req.PageSize, _ = strconv.Atoi(pss)
+	}
+	pns := qs.Get("page_number")
+	if pns != "" {
+		req.PageNumber, _ = strconv.Atoi(pns)
+	}
+	req.Keywords = qs.Get("kws")
+
+	return req
+}
+
+func NewHostSet() *HostSet {
+	return &HostSet{
+		Items: []*Host{},
+	}
+}
+
 type HostSet struct {
-	Items []*Host
-	Total int
+	Total int     `json:"total"`
+	Items []*Host `json:"items"`
 }
 
 func NewHost() *Host {

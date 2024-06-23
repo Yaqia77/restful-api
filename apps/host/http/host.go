@@ -26,14 +26,14 @@ func (h *Handler) createHost(c *gin.Context) {
 }
 
 func (h *Handler) queryHost(c *gin.Context) {
-	ins := host.NewQueryHostRequest()
+	req := host.NewQueryHostFromHTTP(c.Request)
 
-	if err := c.BindQuery(ins); err != nil {
+	if err := c.BindQuery(req); err != nil {
 		utils.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	result, err := h.svc.QueryHost(c.Request.Context(), ins)
+	result, err := h.svc.QueryHost(c.Request.Context(), req)
 	if err != nil {
 		utils.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

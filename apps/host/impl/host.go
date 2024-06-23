@@ -2,6 +2,7 @@ package impl
 
 import (
 	"context"
+	"fmt"
 	"restful-api/apps/host"
 	"restful-api/conf"
 	"restful-api/pkg/utils"
@@ -42,7 +43,8 @@ func (i *HostServiceImpl) CreateHost(ctx context.Context, ins *host.Host) (*host
 }
 
 func (i *HostServiceImpl) QueryHost(ctx context.Context, req *host.QueryHostRequest) (*host.HostSet, error) {
-	var hosts []*host.Host
+	// var hosts []*host.Host
+	hosts := host.NewHostSet()
 	var totalCount int64
 
 	// Base query
@@ -61,12 +63,12 @@ func (i *HostServiceImpl) QueryHost(ctx context.Context, req *host.QueryHostRequ
 
 	// Apply pagination
 	offset := (req.PageNumber - 1) * req.PageSize
-	if err := query.Limit(req.PageSize).Offset(offset).Find(&hosts).Error; err != nil {
+	if err := query.Limit(req.PageSize).Offset(offset).Find(&hosts.Items).Error; err != nil {
 		return nil, err
 	}
-
+	fmt.Println("111111111111", hosts.Items)
 	hostSet := &host.HostSet{
-		Items: hosts,
+		Items: hosts.Items,
 		Total: int(totalCount),
 	}
 
