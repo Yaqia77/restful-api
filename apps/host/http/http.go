@@ -22,9 +22,12 @@ func (h *Handler) Config() {
 }
 
 func (h *Handler) Registry(r gin.IRouter) {
-	r.POST("/hosts", h.createHost)
-	r.GET("/hosts", h.queryHost)
-	r.GET("/hosts/:id", h.describeHost)
+	r.POST("/hosts", h.createHost)       //创建
+	r.GET("/hosts", h.queryHost)         //查询列表
+	r.GET("/hosts/:id", h.describeHost)  //查询单个
+	r.PUT("/hosts/:id", h.putHost)       //全量更新
+	r.PATCH("/hosts/:id", h.patchHost)   //局部更新
+	r.DELETE("/hosts/:id", h.deleteHost) //删除
 }
 
 func (h *Handler) Name() string {

@@ -48,7 +48,8 @@ func (i *HostServiceImpl) QueryHost(ctx context.Context, req *host.QueryHostRequ
 	var totalCount int64
 
 	// Base query
-	query := i.db.Model(&host.Resource{}).Joins("left join host on host.resource_id = id").Preload("Describe")
+	// query := i.db.Model(&host.Resource{}).Joins("left join host on host.resource_id = id").Preload("Describe")
+	query := i.db.Model(&host.Resource{}).Joins("left join host on host.resource_id = resource.id").Preload("Describe")
 
 	// Apply keyword filter if provided
 	if req.Keywords != "" {
@@ -89,9 +90,91 @@ func (i *HostServiceImpl) DescribeHost(ctx context.Context, req *host.DescribeHo
 }
 
 func (i *HostServiceImpl) UpdateHost(ctx context.Context, req *host.UpdateHostRequest) (*host.Host, error) {
-	return nil, nil
-}
+	// 获取已有对象
+	ins, err := i.DescribeHost(ctx, host.NewDescribeHostRequestWithId(req.Id))
+	if err != nil {
+		return nil, err
+	}
+	// 设置 Resource 和 Describe 中的 ResourceID 为相同的值
+	// ins.ResourceID = ins.Id
 
+	fmt.Println("33333333", ins.Describe)
+	// 根据更新的模式, 更新对象
+	switch req.UpdateMode {
+	case host.UPDATE_MODE_PUT:
+		if err := ins.Put(req.Host); err != nil {
+			return nil, err
+		}
+		// 整个对象的局部更新
+	case host.UPDATE_MODE_PATCH:
+		if err := ins.Patch(req.Host); err != nil {
+			return nil, err
+		}
+	default:
+		return nil, fmt.Errorf("update_mode only requred put/patch")
+	}
+	ins.Describe.ResourceID = ins.Resource.Id
+	// 检查更新后的数据是否合法
+	if err := ins.Validate(); err != nil {
+		return nil, err
+	}
+	fmt.Println("111", ins.Resource)
+
+	fmt.Println("222", ins.Describe)
+	// 获取要更新的资源ID
+	// resourceID := ins.Resource.Id
+	// 更新数据库里面的数据
+	// 更新数据库里面的数据
+	if err := i.db.Save(ins.Resource).Error; err != nil {
+		return nil, err
+	}
+	if err := i.db.Save(ins.Describe).Error; err != nil {
+		return nil, err
+	}
+
+	// 返回更新后的对象
+	return ins, nil
+}
 func (i *HostServiceImpl) DeleteHost(ctx context.Context, req *host.DeleteHostRequest) (*host.Host, error) {
-	return nil, nil
+	hosts := host.NewHost()
+	query := i.db.Model(&host.Resource{}).Joins("left join host on host.resource_id = id").Preload("Describe")
+
+	query = query.Where("resource.id = ? ", req.Id)
+
+	if err := query.First(&hosts).Error; err != nil {
+		return nil, err
+	}
+	fmt.Println("id1111111111", req.Id)
+	//删除资源和描述
+	deleteDescribe := func(tx *gorm.DB) error {
+		if err := tx.Where("resource_id = ?", req.Id).Delete(&host.Describe{}).Error; err != nil {
+			return err
+		}
+		return nil
+	}
+
+	deleteResource := func(tx *gorm.DB) error {
+		if err := tx.Where("id = ?", req.Id).Delete(&host.Resource{}).Error; err != nil {
+			return err
+		}
+		return nil
+	}
+
+	i.l.Debug("DeleteHost", "transfer funds")
+
+	// 使用事务删除资源和描述
+	err := i.db.Transaction(func(tx *gorm.DB) error {
+		if err := deleteDescribe(tx); err != nil {
+			return err
+		}
+		if err := deleteResource(tx); err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		i.l.Error("delete host failed", err)
+		return nil, err
+	}
+	return hosts, nil
 }
